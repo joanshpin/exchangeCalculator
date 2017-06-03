@@ -6,6 +6,7 @@
     <meta name="twitter:" content="">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <script src="app.js" type="text/javascript"></script>
+    <link href="https://fonts.googleapis.com/css?family=Roboto+Condensed:400,700" rel="stylesheet">
     <link rel="stylesheet" type="text/css" href="style.css">
   </head>
   <body>
@@ -16,15 +17,14 @@
       <fieldset>
         <legend>Exchange rate</legend>
         <label for="exchangeRate">1 EUR = </label>
-        <input name="exchangeRate" id="exchangeRate" type="number" autofocus="true">
+        <input name="exchangeRate" id="exchangeRate" type="text" autofocus="true" step="0.01" required>
       </fieldset>
 
       <fieldset>
         <legend>Add new transaction</legend>
         <label for="transactionName"></label>
         <input name="transactionName" id="transactionName" type="text" placeholder="Transaction name">
-        <label for="quantity"></label>
-        <input name="quantity" id="quantity" type="number" placeholder="Amount of money">
+        <input name="quantity" id="quantity" type="text" placeholder="Amount of money">
         <input type="button" id="addTransaction" name="addTransaction" value="Add Transaction">
       </fieldset>
 
@@ -34,10 +34,10 @@
       <h3>List of transactions:</h3>
       <ol>
       </ol>
-      <p>SUMA: EUR: <span id="euroSum">0</span> PLN: <span id="plnSum">0</span></p>
+      <p class="sum">SUMA: EUR: <span id="euroSum">0</span> PLN: <span id="plnSum">0</span></p>
     </div>
 
-    <div>
+    <div class="hidden">
       <h3>Your biggest transaction:</h3>
       <ol id="biggestTransaction">
       </ol>

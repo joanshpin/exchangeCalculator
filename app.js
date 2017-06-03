@@ -5,82 +5,112 @@ document.addEventListener("DOMContentLoaded", function() {
   const newTransactionQuantity = document.getElementById("quantity");
   const addTransactionButton = document.getElementById("addTransaction");
   const transactionList = document.querySelector(".transactionList ol");
-  const transactions = document.querySelector(".transactionList");
-  const arrOfTransactions = [];
   const biggestTransaction = document.getElementById("biggestTransaction");
   const euroSum = document.getElementById("euroSum");
   const plnSum = document.getElementById("plnSum");
-  const deleteBtns = transactions.querySelectorAll("button");
+  const deleteBtns = document.querySelectorAll(".transactionList button");
+  const transactions = [];
 
-  biggestTransaction.parentNode.style.display = "none";
+  function isEmpty(str) {
+    return str.trim() === "";
+  };
 
-  addTransactionButton.addEventListener("click", function() { //adding first list before change rate
-    let exchangeRateVal = parseFloat(exchangeRateInput.value);
-    let exchangeRateValRound = Math.round(exchangeRateVal * 100) / 100;
-    let transactionNameVal = newTransactionName.value;
-    let newTransactionQuantityVal = parseFloat(newTransactionQuantity.value);
-    let newTransactionQuantityValRound = Math.round(newTransactionQuantityVal * 100) / 100;
-    let resultQuantity = newTransactionQuantityValRound * exchangeRateValRound;
+  function isNumber(str) {
+    if (isEmpty(str))
+      return false;
+
+    try {
+      return !isNaN(parseFloat(str)) && isFinite(str); //return jest numberem i jest skonczony
+    } catch(e) {
+      console.log('error parsing input:', str, e);
+    };
+  };
+
+  function validateRequiredString(str, fieldName) {
+    if(isEmpty(str)) {
+      alert("Please fill the " + fieldName);
+      return false;
+    };
+    return str;
+  };
+
+  function validateRequiredAmount(str, fieldName) {
+    if (isEmpty(str)) {
+      alert("Please fill the " + fieldName);
+      return false;
+    };
+    if (!isNumber(str)) {
+      alert("Please enter valid number for " + fieldName);
+      return false;
+    };
+    return parseFloat(str);
+  };
+
+  function addNewTransaction() {
+    const exchangeRate = validateRequiredAmount(exchangeRateInput.value, "transaction exchange rate");
+    if(exchangeRate === false) {
+      return;
+    }
+    const transactionName = validateRequiredString(newTransactionName.value, "transaction name");
+    if (transactionName === false) {
+      return;
+    }
+    const transactionQuantity = validateRequiredAmount(newTransactionQuantity.value, "transaction quantity");
+    if(transactionQuantity === false) {
+      return;
+    }
+
+    let exchangeRateRound = Math.round(exchangeRate * 100) / 100;
+
+    // let newTransactionQuantityVal = parseFloat(newTransactionQuantity.value);
+    let newTransactionQuantityValRound = Math.round(transactionQuantity * 100) / 100;
+
+    let resultQuantity = newTransactionQuantityValRound * exchangeRateRound;
     let resultQuantityRound = Math.round(resultQuantity * 100) / 100;
 
     newTransactionQuantity.value = newTransactionQuantityValRound;
     biggestTransaction.parentNode.style.display = "block";
 
-    if (transactionNameVal != "") {
-      if (newTransactionQuantityVal != "") {
-
-        const oneTransactionObj = {
-          tranName:transactionNameVal,
-          euroValue: newTransactionQuantityValRound,
-          plnValue: resultQuantityRound,
-          exchangeRate: exchangeRateValRound
-        };
-
-        let tranIndex = arrOfTransactions.length;
-        arrOfTransactions.push(oneTransactionObj);
-
-        let oneListElement = oneTransactionObj.tranName + " EUR: " + oneTransactionObj.euroValue + " PLN: " + oneTransactionObj.plnValue;
-
-        let entry = document.createElement('li');
-        let deleteEntryBtn = createDeleteBtn();
-
-        entry.appendChild(document.createTextNode(oneListElement));
-        entry.setAttribute('tranIndex', tranIndex);
-        entry.appendChild(deleteEntryBtn);
-        transactionList.appendChild(entry);
-
-
-        calcSum();
-        findBiggestTransaction()
-
-      } else {
-        alert("Please fill the transaction quantity");
-      };
-    } else {
-      alert("Please fill the transaction name");
+    const oneTransactionObj = {
+      tranName:transactionName,
+      euroValue: newTransactionQuantityValRound,
+      plnValue: resultQuantityRound,
+      exchangeRate: exchangeRateRound
     };
-  }, false); //closing addEventListener to click on addTransaction
 
+    let tranIndex = transactions.length;
+    transactions.push(oneTransactionObj);
 
-  exchangeRateInput.addEventListener("change", function() {
-    let exchangeRateVal = parseFloat(exchangeRateInput.value);
-    let exchangeRateValRound = Math.round(exchangeRateVal * 100) / 100;
+    let oneListElement = oneTransactionObj.tranName + " EUR: " + oneTransactionObj.euroValue + " PLN: " + oneTransactionObj.plnValue;
+
+    let entry = document.createElement('li');
+    let deleteEntryBtn = createDeleteBtn();
+
+    entry.appendChild(document.createTextNode(oneListElement));
+    entry.setAttribute('tranIndex', tranIndex);
+    entry.appendChild(deleteEntryBtn);
+    transactionList.appendChild(entry);
+
+    calcSum();
+    updateBiggestTransaction();
+  };
+
+  function onExchangeRateChange() {
+    const exchangeRate = validateRequiredAmount(exchangeRateInput.value, "transaction quantity");
+    if (exchangeRate === false) {
+      return;
+    }
+    let exchangeRateValRound = Math.round(exchangeRate * 100) / 100;
     exchangeRateInput.value = exchangeRateValRound;
 
-    if (exchangeRateValRound !== " ") {
-      removeAllTransactionsFromList();
-      addWholeListFromArr();
-      calcSum()
-      findBiggestTransaction()
-
-    } else {
-      alert("Please fill the exchange rate.")
-    };
-  });
-
+    removeAllTransactionsFromList();
+    addWholeListFromArr();
+    calcSum();
+    updateBiggestTransaction();
+  };
 
   function addWholeListFromArr() {
-    for (let x of arrOfTransactions) {
+    for (let x of transactions) {
       const exchangeRateVal = parseFloat(exchangeRateInput.value);
       const exchangeRateValRound = Math.round(exchangeRateVal * 100) / 100;
       let newResult = exchangeRateValRound * x.euroValue;
@@ -90,7 +120,7 @@ document.addEventListener("DOMContentLoaded", function() {
 
       const oneListElement = x.tranName + " EUR: " + x.euroValue + " PLN: " + x.plnValue;
 
-      let tranIndex = arrOfTransactions.indexOf(x)
+      let tranIndex = transactions.indexOf(x)
       let entry = document.createElement('li');
       let deleteEntryBtn = createDeleteBtn();
       entry.appendChild(document.createTextNode(oneListElement));
@@ -108,25 +138,39 @@ document.addEventListener("DOMContentLoaded", function() {
     return deleteEntryBtn;
   }
 
-  function findBiggestTransaction() {
-    if (arrOfTransactions.length > 0) {
-      while (biggestTransaction.childNodes[1]) { //deletes if it exists
+  function deleteOldBiggestTransaction() {
+    if (transactions.length > 0) {
+      while (biggestTransaction.childNodes[1]) {
         biggestTransaction.removeChild(biggestTransaction.childNodes[1]);
       };
-
-      let highest = null; //search for the biggest
-      for (let i = 0; i < arrOfTransactions.length; i++) {
-        if (highest === null) {
-          highest = arrOfTransactions[i];
-        } else if (highest.plnValue < arrOfTransactions[i].plnValue) {
-          highest = arrOfTransactions[i];
-        };
+    };
+  };
+  function calcBiggestTransaction() {
+    let highest = null;
+    for (let i = 0; i < transactions.length; i++) {
+      if (highest === null) {
+        highest = transactions[i];
+      } else if (highest.plnValue < transactions[i].plnValue) {
+        highest = transactions[i];
       };
+    };
+    return highest;
+  };
 
+  function updateBiggestUi() {
+    if (transactions.length > 0) {
+      const highest = calcBiggestTransaction();
       const biggestListElement = highest.tranName + " EUR: " + highest.euroValue + " PLN: " + highest.plnValue;
       let entry = document.createElement('li');
       entry.appendChild(document.createTextNode(biggestListElement));
       biggestTransaction.appendChild(entry);
+    };
+  };
+
+  function updateBiggestTransaction() {
+    if (transactions.length > 0) {
+      deleteOldBiggestTransaction();
+      updateBiggestUi();
     };
   };
 
@@ -136,43 +180,39 @@ document.addEventListener("DOMContentLoaded", function() {
     };
   };
 
-  function removeOneTransactionFromList() {
-    transactionList.addEventListener('click', function(event) {
-      if (event.target.tagName.toLowerCase() === 'button') {
-        let thisBtn = event.target;
-        let listItem = thisBtn.parentNode;
-        let listItemIndex = listItem.getAttribute('tranIndex');
-
-        transactionList.removeChild(listItem); //delete from html
-        arrOfTransactions.splice(listItemIndex, 1) //delete from array
-
-        removeAllTransactionsFromList();
-        addWholeListFromArr();
-        calcSum();
-        findBiggestTransaction()
-      };
-    });
+  function deleteTransaction(event) {
+    if (event.target.tagName.toLowerCase() === "button") {
+      let thisBtn = event.target;
+      let listItem = thisBtn.parentNode;
+      let listItemIndex = listItem.getAttribute("tranIndex");
+      transactionList.removeChild(listItem); //from html
+      transactions.splice(listItemIndex, 1); //from array
+      removeAllTransactionsFromList();
+      addWholeListFromArr();
+      calcSum();
+      updateBiggestTransaction()
+    };
   };
-  removeOneTransactionFromList()
 
+  function updateSumUi(euroAmount, plnAmount) {
+    euroSum.innerText = euroAmount;
+    plnSum.innerText = plnAmount;
+  };
 
   function calcSum() {
-    let euroSumText = document.getElementById("euroSum").innerText;
-    let plnSumText = document.getElementById("plnSum").innerText;
-    let parsedEuroSum = parseInt(euroSumText);
-    let parsedPlnSum = parseInt(plnSumText);
-
-    parsedEuroSum = 0;
-    parsedPlnSum = 0;
-
-    for (let x of arrOfTransactions) {
-      parsedPlnSum += parseInt(x.plnValue);
-      parsedEuroSum += parseInt(x.euroValue);
+    let euroSum = 0;
+    let plnSum = 0;
+    for (let x of transactions) {
+      euroSum += parseFloat(x.euroValue);
+      plnSum += parseFloat(x.plnValue);
     };
-
-    euroSum.innerText = parsedEuroSum;
-    plnSum.innerText = parsedPlnSum;
-
+    euroSumRound = Math.round(euroSum * 100) / 100;
+    plnSumRound = Math.round(plnSum * 100) / 100;
+    updateSumUi(euroSumRound, plnSumRound);
   };
 
-}, false); //closing DOMContentLoaded
+  addTransactionButton.addEventListener("click", addNewTransaction);
+  transactionList.addEventListener("click", deleteTransaction);
+  exchangeRateInput.addEventListener("change", onExchangeRateChange);
+
+}); //closing DOMContentLoaded
